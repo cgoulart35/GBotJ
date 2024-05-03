@@ -87,7 +87,11 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
 
     @Override
     public void onSlashCommandInteraction(final SlashCommandInteractionEvent event) {
-        // Call handleSlashCommand and subscribe to the Mono to trigger the operation
-        slashCommandHandler.handleSlashCommand(event).subscribe();
+        try {
+            // Call handleSlashCommand and subscribe to the Mono to trigger the operation
+            slashCommandHandler.handleSlashCommand(event).subscribe();
+        } catch (Throwable e) {
+            LOGGER.error("Exception occurred during slash command interaction.", e);
+        }
     }
 }
