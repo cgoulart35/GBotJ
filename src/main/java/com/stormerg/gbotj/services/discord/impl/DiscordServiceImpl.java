@@ -2,7 +2,6 @@ package com.stormerg.gbotj.services.discord.impl;
 
 import com.stormerg.gbotj.services.discord.DiscordService;
 import com.stormerg.gbotj.services.discord.commands.SlashCommandHandler;
-import com.stormerg.gbotj.services.firebase.FirebaseService;
 import com.stormerg.gbotj.services.logging.LoggingService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
 import net.dv8tion.jda.api.JDA;
@@ -27,16 +26,13 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
     private final SlashCommandData[] REGISTERED_SLASH_COMMANDS;
 
     private final Logger LOGGER;
-    private final FirebaseService firebaseService;
     private final SlashCommandHandler slashCommandHandler;
 
     @Autowired
     public DiscordServiceImpl(final PropertiesManager propertiesManager,
                               final LoggingService loggingService,
-                              final FirebaseService firebaseService,
                               final SlashCommandHandler slashCommandHandler) {
         LOGGER = loggingService.getLogger(DiscordServiceImpl.class);
-        this.firebaseService = firebaseService;
         this.slashCommandHandler = slashCommandHandler;
 
         DISCORD_TOKEN = propertiesManager.getDiscordToken();
@@ -57,9 +53,6 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
     }
 
     private void registerCommands(final JDA jda) {
-        LOGGER.info("Registering the following slash commands: {}",
-                Arrays.stream(REGISTERED_SLASH_COMMANDS).map(SlashCommandData::getName).collect(Collectors.toSet()));
-
         // Register guild-specific slash commands
         for (String guildId : SLASH_COMMAND_TEST_GUILDS) {
             CommandListUpdateAction guildCommands =
@@ -71,12 +64,20 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
         }
 
         // Register global slash commands
-        CommandListUpdateAction globalCommands =
-                jda.updateCommands();
+        String registeredGuilds = "";
+        if (SLASH_COMMAND_TEST_GUILDS.length == 0) {
+            CommandListUpdateAction globalCommands =
+                    jda.updateCommands();
 
-        globalCommands.addCommands(
-                REGISTERED_SLASH_COMMANDS
-        ).queue();
+            globalCommands.addCommands(
+                    REGISTERED_SLASH_COMMANDS
+            ).queue();
+        } else
+            registeredGuilds = " in guilds " + Arrays.toString(SLASH_COMMAND_TEST_GUILDS);
+
+        LOGGER.info("Registered the following slash commands{}: {}",
+                registeredGuilds,
+                Arrays.stream(REGISTERED_SLASH_COMMANDS).map(SlashCommandData::getName).collect(Collectors.toSet()));
     }
 
     @Override
@@ -86,6 +87,7 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
 
     @Override
     public void onSlashCommandInteraction(final SlashCommandInteractionEvent event) {
-        slashCommandHandler.handleSlashCommand(event);
+        // Call handleSlashCommand and subscribe to the Mono to trigger the operation
+        slashCommandHandler.handleSlashCommand(event).subscribe();
     }
 }

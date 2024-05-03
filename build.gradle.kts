@@ -22,6 +22,7 @@ dependencies {
 
     // Spring application
     implementation("org.springframework.boot:spring-boot-starter-web") // Essential for REST API
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // Unit tests
     testImplementation(platform("org.junit:junit-bom:5.10.0"))

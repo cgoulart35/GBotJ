@@ -8,9 +8,9 @@ public abstract class AbstractFirebaseRestService extends AbstractRestService {
 
     protected final FirebaseService firebaseService;
 
-    public AbstractFirebaseRestService(PropertiesManager propertiesManager,
-                                       LoggingService loggingService,
-                                       FirebaseService firebaseService) {
+    public AbstractFirebaseRestService(final PropertiesManager propertiesManager,
+                                       final LoggingService loggingService,
+                                       final FirebaseService firebaseService) {
         super(propertiesManager, loggingService);
         this.firebaseService = firebaseService;
     }

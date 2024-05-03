@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 @Service
 @ConfigurationProperties(prefix = "gbotj")
 public class PropertiesManagerImpl implements PropertiesManager {
@@ -152,7 +154,8 @@ public class PropertiesManagerImpl implements PropertiesManager {
     }
 
     public String[] getDiscordDevSlashCmdGuildIdsArray() {
-        return discordDevSlashCmdGuildIds.split(DELIMITER);
+        return Arrays.stream(discordDevSlashCmdGuildIds.split(DELIMITER))
+                .filter(id -> !id.isEmpty()).toArray(String[]::new);
     }
 
     public String getDiscordDevSlashCmdGuildIds() {

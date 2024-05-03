@@ -11,7 +11,7 @@ public abstract class AbstractRestService implements RestService {
 
     protected Logger LOGGER;
 
-    public AbstractRestService(PropertiesManager propertiesManager, LoggingService loggingService) {
+    public AbstractRestService(final PropertiesManager propertiesManager, final LoggingService loggingService) {
         this.propertiesManager = propertiesManager;
         this.loggingService = loggingService;
 

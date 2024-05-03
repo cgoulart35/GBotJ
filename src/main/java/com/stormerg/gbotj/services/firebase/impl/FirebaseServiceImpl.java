@@ -10,12 +10,12 @@ import com.stormerg.gbotj.services.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class FirebaseServiceImpl implements FirebaseService {
@@ -53,150 +53,150 @@ public class FirebaseServiceImpl implements FirebaseService {
         }
     }
 
-    public CompletableFuture<Void> updateChildValues(final String path, final Map<String, Object> updates) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                // Update the data in the transaction
-                for (Map.Entry<String, Object> entry : updates.entrySet()) {
-                    mutableData.child(entry.getKey()).setValue(entry.getValue());
+    public Mono<Void> updateChildValues(final String path, final Map<String, Object> updates) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.runTransaction(new Transaction.Handler() {
+                @Override
+                public Transaction.Result doTransaction(MutableData mutableData) {
+                    // Update the data in the transaction
+                    for (Map.Entry<String, Object> entry : updates.entrySet()) {
+                        mutableData.child(entry.getKey()).setValue(entry.getValue());
+                    }
+                    return Transaction.success(mutableData);
                 }
-                return Transaction.success(mutableData);
-            }
 
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                if (databaseError == null && committed) {
-                    LOGGER.info(VALUES_UPDATED_AT_PATH_LOG, path, updates);
-                    future.complete(null);
-                } else {
-                    LOGGER.error("Error updating child values at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
-                    future.completeExceptionally(databaseError != null ? databaseError.toException() : new RuntimeException("Transaction not committed"));
+                @Override
+                public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                    if (databaseError == null && committed) {
+                        LOGGER.info(VALUES_UPDATED_AT_PATH_LOG, path, updates);
+                        sink.success();
+                    } else {
+                        LOGGER.error("Error updating child values at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
+                        sink.error(databaseError != null ? databaseError.toException() : new RuntimeException("Transaction not committed"));
+                    }
                 }
-            }
+            });
         });
-        return future;
     }
 
-    public CompletableFuture<Void> setValueAtPath(final String path, final Object value) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-                mutableData.setValue(value);
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
-                if (databaseError == null && committed) {
-                    LOGGER.info(VALUE_SET_AT_PATH_LOG, path, value);
-                    future.complete(null);
-                } else {
-                    LOGGER.error("Error setting value at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
-                    future.completeExceptionally(databaseError != null ? databaseError.toException() : new RuntimeException("Transaction not committed"));
+    public Mono<Void> setValueAtPath(final String path, final Object value) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.runTransaction(new Transaction.Handler() {
+                @Override
+                public Transaction.Result doTransaction(MutableData mutableData) {
+                    mutableData.setValue(value);
+                    return Transaction.success(mutableData);
                 }
-            }
+
+                @Override
+                public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
+                    if (databaseError == null && committed) {
+                        LOGGER.info(VALUE_SET_AT_PATH_LOG, path, value);
+                        sink.success();
+                    } else {
+                        LOGGER.error("Error setting value at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
+                        sink.error(databaseError != null ? databaseError.toException() : new RuntimeException("Transaction not committed"));
+                    }
+                }
+            });
         });
-        return future;
     }
 
-    public CompletableFuture<Map<String, Object>> getValueAtPathMap(final String path) {
-        CompletableFuture<Map<String, Object>> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
-                logValueRetrieved(path, value);
-                future.complete(value);
-            }
+    public Mono<Map<String, Object>> getValueAtPathMap(final String path) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
+                    logValueRetrieved(path, value);
+                    sink.success(value);
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                future.completeExceptionally(databaseError.toException());
-            }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    sink.error(databaseError.toException());
+                }
+            });
         });
-        return future;
     }
 
-    public CompletableFuture<List<Object>> getValueAtPathList(final String path) {
-        CompletableFuture<List<Object>> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                List<Object> value = (List<Object>) dataSnapshot.getValue();
-                logValueRetrieved(path, value);
-                future.complete(value);
-            }
+    public Mono<List<Object>> getValueAtPathList(final String path) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    List<Object> value = (List<Object>) dataSnapshot.getValue();
+                    logValueRetrieved(path, value);
+                    sink.success(value);
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                future.completeExceptionally(databaseError.toException());
-            }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    sink.error(databaseError.toException());
+                }
+            });
         });
-        return future;
     }
 
-    public CompletableFuture<String> getValueAtPathString(final String path) {
-        CompletableFuture<String> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = (String) dataSnapshot.getValue();
-                logValueRetrieved(path, value);
-                future.complete(value);
-            }
+    public Mono<String> getValueAtPathString(final String path) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    String value = (String) dataSnapshot.getValue();
+                    logValueRetrieved(path, value);
+                    sink.success(value);
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                future.completeExceptionally(databaseError.toException());
-            }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    sink.error(databaseError.toException());
+                }
+            });
         });
-        return future;
     }
 
-    public CompletableFuture<Integer> getValueAtPathInteger(final String path) {
-        CompletableFuture<Integer> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Integer value = dataSnapshot.getValue(Integer.class);
-                logValueRetrieved(path, value);
-                future.complete(value);
-            }
+    public Mono<Integer> getValueAtPathInteger(final String path) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Integer value = dataSnapshot.getValue(Integer.class);
+                    logValueRetrieved(path, value);
+                    sink.success(value);
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                future.completeExceptionally(databaseError.toException());
-            }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    sink.error(databaseError.toException());
+                }
+            });
         });
-        return future;
     }
 
-    public CompletableFuture<Boolean> getValueAtPathBoolean(final String path) {
-        CompletableFuture<Boolean> future = new CompletableFuture<>();
-        DatabaseReference reference = database.getReference(path);
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Boolean value = dataSnapshot.getValue(Boolean.class);
-                logValueRetrieved(path, value);
-                future.complete(value);
-            }
+    public Mono<Boolean> getValueAtPathBoolean(final String path) {
+        return Mono.create(sink -> {
+            DatabaseReference reference = database.getReference(path);
+            reference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Boolean value = dataSnapshot.getValue(Boolean.class);
+                    logValueRetrieved(path, value);
+                    sink.success(value);
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                future.completeExceptionally(databaseError.toException());
-            }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    sink.error(databaseError.toException());
+                }
+            });
         });
-        return future;
     }
 
     private void logValueRetrieved(String path, Object value) {
