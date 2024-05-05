@@ -3,6 +3,7 @@ package com.stormerg.gbotj.services.discord.impl;
 import com.stormerg.gbotj.services.discord.DiscordService;
 import com.stormerg.gbotj.services.discord.commands.SlashCommandHandler;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -12,6 +13,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -37,6 +39,8 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
         REGISTERED_SLASH_COMMANDS = slashCommandHandler.getSupportedSlashCommands();
     }
 
+    @PostConstruct
+    @Async
     public void init() {
         try {
             JDA jda = JDABuilder.createDefault(DISCORD_TOKEN)
