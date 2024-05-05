@@ -2,8 +2,8 @@ package com.stormerg.gbotj.services.discord.impl;
 
 import com.stormerg.gbotj.services.discord.DiscordService;
 import com.stormerg.gbotj.services.discord.commands.SlashCommandHandler;
-import com.stormerg.gbotj.services.logging.LoggingService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -11,13 +11,13 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class DiscordServiceImpl extends ListenerAdapter implements DiscordService {
 
@@ -25,14 +25,11 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
     private final String[] SLASH_COMMAND_TEST_GUILDS;
     private final SlashCommandData[] REGISTERED_SLASH_COMMANDS;
 
-    private final Logger LOGGER;
     private final SlashCommandHandler slashCommandHandler;
 
     @Autowired
     public DiscordServiceImpl(final PropertiesManager propertiesManager,
-                              final LoggingService loggingService,
                               final SlashCommandHandler slashCommandHandler) {
-        LOGGER = loggingService.getLogger(DiscordServiceImpl.class);
         this.slashCommandHandler = slashCommandHandler;
 
         DISCORD_TOKEN = propertiesManager.getDiscordToken();
@@ -48,7 +45,7 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
                     .awaitReady();
             registerCommands(jda);
         } catch (Exception e) {
-            LOGGER.error("Error initializing Discord bot: {}", e.getMessage());
+            log.error("Error initializing Discord bot: {}", e.getMessage());
         }
     }
 
@@ -75,7 +72,7 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
         } else
             registeredGuilds = " in guilds " + Arrays.toString(SLASH_COMMAND_TEST_GUILDS);
 
-        LOGGER.info("Registered the following slash commands{}: {}",
+        log.info("Registered the following slash commands{}: {}",
                 registeredGuilds,
                 Arrays.stream(REGISTERED_SLASH_COMMANDS).map(SlashCommandData::getName).collect(Collectors.toSet()));
     }
@@ -91,7 +88,7 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
             // Call handleSlashCommand and subscribe to the Mono to trigger the operation
             slashCommandHandler.handleSlashCommand(event).subscribe();
         } catch (Throwable e) {
-            LOGGER.error("Exception occurred during slash command interaction.", e);
+            log.error("Exception occurred during slash command interaction.", e);
         }
     }
 }

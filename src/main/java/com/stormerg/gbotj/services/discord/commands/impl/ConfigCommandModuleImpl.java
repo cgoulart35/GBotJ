@@ -2,8 +2,8 @@ package com.stormerg.gbotj.services.discord.commands.impl;
 
 import com.stormerg.gbotj.services.discord.commands.AbstractCommandModule;
 import com.stormerg.gbotj.services.firebase.FirebaseService;
-import com.stormerg.gbotj.services.logging.LoggingService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
+import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.internal.interactions.CommandDataImpl;
@@ -11,19 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class ConfigCommandModuleImpl extends AbstractCommandModule {
 
     @Autowired
     public ConfigCommandModuleImpl(final PropertiesManager propertiesManager,
-                                   final LoggingService loggingService,
                                    final FirebaseService firebaseService) {
-        super(propertiesManager, loggingService, firebaseService);
-    }
-
-    @Override
-    protected void setLogger(){
-        LOGGER = loggingService.getLogger(ConfigCommandModuleImpl.class);
+        super(propertiesManager, firebaseService);
     }
 
     @Override
@@ -35,14 +30,14 @@ public class ConfigCommandModuleImpl extends AbstractCommandModule {
 
     @Override
     public Mono<Void> handleCommand(final SlashCommandData command, final SlashCommandInteractionEvent event) {
-        switch (command.getName()) {
-            case "config":
-                // Call configCommand asynchronously and return its Mono
-                return configCommand(command, event);
-            default:
-                // Unknown command
-                return Mono.empty();
+        if (command.getName().equals("config")) {
+            // Call configCommand asynchronously and return its Mono
+            log.info("test");
+            return configCommand(command, event);
         }
+
+        // Unknown command
+        return Mono.empty();
     }
 
     // TODO - remove example

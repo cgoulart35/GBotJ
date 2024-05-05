@@ -5,9 +5,8 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 import com.stormerg.gbotj.services.firebase.FirebaseService;
-import com.stormerg.gbotj.services.logging.LoggingService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
-import org.slf4j.Logger;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -17,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class FirebaseServiceImpl implements FirebaseService {
 
@@ -25,14 +25,10 @@ public class FirebaseServiceImpl implements FirebaseService {
     private static final String VALUE_SET_AT_PATH_LOG = "Value set successfully at path: {\"path\":\"{}\",\"value\":\"{}\"}";
     private static final String VALUE_RETRIEVED_AT_PATH_LOG = "Value retrieved successfully at path: {\"path\":\"{}\",\"value\":\"{}\"}";
 
-    private final Logger LOGGER;
-
     private FirebaseDatabase database;
 
     @Autowired
-    public FirebaseServiceImpl(final PropertiesManager propertiesManager, final LoggingService loggingService) {
-        LOGGER = loggingService.getLogger(FirebaseServiceImpl.class);
-
+    public FirebaseServiceImpl(final PropertiesManager propertiesManager) {
         try {
             // Create FirebaseOptions
             FirebaseOptions options = FirebaseOptions.builder()
@@ -46,10 +42,10 @@ public class FirebaseServiceImpl implements FirebaseService {
             // Initialize FirebaseDatabase instance
             database = FirebaseDatabase.getInstance();
 
-            LOGGER.info("FirebaseServiceImpl initialized successfully.");
+            log.info("FirebaseServiceImpl initialized successfully.");
 
         } catch (IOException e) {
-            LOGGER.error("Failed to initialize FirebaseServiceImpl: {}", e.getMessage());
+            log.error("Failed to initialize FirebaseServiceImpl: {}", e.getMessage());
         }
     }
 
@@ -69,10 +65,10 @@ public class FirebaseServiceImpl implements FirebaseService {
                 @Override
                 public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
                     if (databaseError == null && committed) {
-                        LOGGER.info(VALUES_UPDATED_AT_PATH_LOG, path, updates);
+                        log.info(VALUES_UPDATED_AT_PATH_LOG, path, updates);
                         sink.success();
                     } else {
-                        LOGGER.error("Error updating child values at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
+                        log.error("Error updating child values at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
                         sink.error(databaseError != null ? databaseError.toException() : new RuntimeException("Transaction not committed"));
                     }
                 }
@@ -93,10 +89,10 @@ public class FirebaseServiceImpl implements FirebaseService {
                 @Override
                 public void onComplete(DatabaseError databaseError, boolean committed, DataSnapshot dataSnapshot) {
                     if (databaseError == null && committed) {
-                        LOGGER.info(VALUE_SET_AT_PATH_LOG, path, value);
+                        log.info(VALUE_SET_AT_PATH_LOG, path, value);
                         sink.success();
                     } else {
-                        LOGGER.error("Error setting value at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
+                        log.error("Error setting value at path {}: {}", path, databaseError != null ? databaseError.getMessage() : "Transaction not committed");
                         sink.error(databaseError != null ? databaseError.toException() : new RuntimeException("Transaction not committed"));
                     }
                 }
@@ -200,6 +196,6 @@ public class FirebaseServiceImpl implements FirebaseService {
     }
 
     private void logValueRetrieved(String path, Object value) {
-        LOGGER.info(VALUE_RETRIEVED_AT_PATH_LOG, path, value);
+        log.info(VALUE_RETRIEVED_AT_PATH_LOG, path, value);
     }
 }
