@@ -1,35 +1,38 @@
 package com.stormerg.gbotj.services.discord.commands.impl;
 
 import com.stormerg.gbotj.services.discord.commands.AbstractCommandModule;
+import com.stormerg.gbotj.services.discord.commands.CustomSlashCommandData;
+import com.stormerg.gbotj.services.discord.commands.helpers.InteractionHelper;
 import com.stormerg.gbotj.services.firebase.FirebaseService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.internal.interactions.CommandDataImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
-public class ConfigCommandModuleImpl extends AbstractCommandModule {
+public class CommandModuleConfigImpl extends AbstractCommandModule {
 
     @Autowired
-    public ConfigCommandModuleImpl(final PropertiesManager propertiesManager,
+    public CommandModuleConfigImpl(final PropertiesManager propertiesManager,
                                    final FirebaseService firebaseService) {
         super(propertiesManager, firebaseService);
     }
 
     @Override
     protected void setSupportedCommands(){
-        supportedCommands = new SlashCommandData[] {
-                new CommandDataImpl("config", "Config command")
+        CustomCommandDataImpl configCommand = new CustomCommandDataImpl("config", "Config command");
+        configCommand.setGuildOnly(true);
+
+        supportedCommands = new CustomSlashCommandData[] {
+                configCommand
         };
     }
 
     @Override
-    public Mono<Void> handleCommand(final SlashCommandData command, final SlashCommandInteractionEvent event) {
+    public Mono<Void> handleCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event) {
         if (command.getName().equals("config")) {
             // Call configCommand asynchronously and return its Mono
             log.info("test");
@@ -41,19 +44,21 @@ public class ConfigCommandModuleImpl extends AbstractCommandModule {
     }
 
     // TODO - remove example
-    private Mono<Void> configCommand(final SlashCommandData command, final SlashCommandInteractionEvent event) {
+    private Mono<Void> configCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event) {
         // Start by sending a message to the user "starting config command"
-        Mono<Void> startingMessage = Mono.fromRunnable(() -> sendMessage(event, true, "Starting config command"));
+        Mono<Void> startingMessage = Mono.fromRunnable(() ->
+                InteractionHelper.sendMessage(event, true, "Starting config command"));
 
         // Get the server's prefix value
         Mono<String> getPrefix = firebaseService.getValueAtPathString("/servers/" + event.getGuild().getId() + "/prefix");
 
         // Send message about prefix before endingMessage
         Mono<Void> prefixMessage = getPrefix.doOnNext(prefix ->
-                        sendMessage(event, false, "Your prefix is: " + prefix)).then();
+                InteractionHelper.sendMessage(event, false, "Your prefix is: " + prefix)).then();
 
         // Send ending message
-        Mono<Void> endingMessage = Mono.fromRunnable(() -> sendMessage(event, false, "Ending config command"));
+        Mono<Void> endingMessage = Mono.fromRunnable(() ->
+                InteractionHelper.sendMessage(event, false, "Ending config command"));
 
         // Combine the starting message, prefix message, and ending message
         return startingMessage
@@ -62,7 +67,7 @@ public class ConfigCommandModuleImpl extends AbstractCommandModule {
     }
 
 //    // TODO - remove example
-//    private Mono<Void> configCommand(final SlashCommandData command, final SlashCommandInteractionEvent event) {
+//    private Mono<Void> configCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event) {
 //        // Start by sending a message to the user "starting config command"
 //        Mono<Void> startingMessage = Mono.fromRunnable(() -> event.reply("Starting config command").queue());
 //
