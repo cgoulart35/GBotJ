@@ -7,5 +7,6 @@ public interface CommandModule {
 
     Mono<Void> handleCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event);
     CustomSlashCommandData[] getSupportedCommands();
+    String getFeatureToggleName();
 
 }

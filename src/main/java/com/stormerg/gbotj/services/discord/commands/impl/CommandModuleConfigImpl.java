@@ -22,13 +22,18 @@ public class CommandModuleConfigImpl extends AbstractCommandModule {
     }
 
     @Override
-    protected void setSupportedCommands(){
+    protected void setSupportedCommands() {
         CustomCommandDataImpl configCommand = new CustomCommandDataImpl("config", "Config command");
         configCommand.setGuildOnly(true);
 
         supportedCommands = new CustomSlashCommandData[] {
                 configCommand
         };
+    }
+
+    @Override
+    protected void setFeatureToggleName() {
+        featureToggleName = null;
     }
 
     @Override

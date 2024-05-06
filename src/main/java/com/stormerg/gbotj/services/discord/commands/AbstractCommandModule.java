@@ -13,6 +13,8 @@ public abstract class AbstractCommandModule implements CommandModule {
 
     @Getter
     protected CustomSlashCommandData[] supportedCommands;
+    @Getter
+    protected String featureToggleName;
 
     public AbstractCommandModule(final PropertiesManager propertiesManager,
                                  final FirebaseService firebaseService) {
@@ -20,8 +22,10 @@ public abstract class AbstractCommandModule implements CommandModule {
         this.firebaseService = firebaseService;
 
         this.setSupportedCommands();
+        this.setFeatureToggleName();
     }
 
     protected abstract void setSupportedCommands();
+    protected abstract void setFeatureToggleName();
     public abstract Mono<Void> handleCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event);
 }
