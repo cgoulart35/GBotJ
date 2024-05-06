@@ -40,7 +40,6 @@ public class CommandModuleConfigImpl extends AbstractCommandModule {
     public Mono<Void> handleCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event) {
         if (command.getName().equals("config")) {
             // Call configCommand asynchronously and return its Mono
-            log.info("test");
             return configCommand(command, event);
         }
 
