@@ -22,6 +22,7 @@ public class PropertiesManagerImpl implements PropertiesManager {
     // GBOT PROPERTIES
     private String version;
     private String timezone;
+    private String serviceKeyPath;
 
     // URL PROPERTIES
     private String firebaseUrl;
@@ -62,7 +63,8 @@ public class PropertiesManagerImpl implements PropertiesManager {
     }
 
     public String toString() {
-        return "PropertiesManagerImpl [version=" + version + ", timezone=" + timezone + ", firebaseUrl=" + firebaseUrl
+        return "PropertiesManagerImpl [version=" + version + ", timezone=" + timezone
+                + ", serviceKeyPath=" + serviceKeyPath + ", firebaseUrl=" + firebaseUrl
                 + ", gitUpdaterUrl=" + gitUpdaterUrl + ", patreonUrl=" + patreonUrl + ", discordToken=" + discordToken
                 + ", discordPatreonGuildId=" + discordPatreonGuildId + ", discordPatreonRoleId=" + discordPatreonRoleId
                 + ", discordWhitelistGuildIds=" + discordWhitelistGuildIds + ", discordDevSlashCmdGuildIds=" + discordDevSlashCmdGuildIds

@@ -7,6 +7,8 @@ public interface PropertiesManager {
     void setVersion(String version);
     String getTimezone();
     void setTimezone(String timezone);
+    String getServiceKeyPath();
+    void setServiceKeyPath(String serviceKeyPath);
 
     // Getters and Setters for URL PROPERTIES
     String getFirebaseUrl();

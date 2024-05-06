@@ -20,7 +20,6 @@ import java.util.Map;
 @Service
 public class FirebaseServiceImpl implements FirebaseService {
 
-    private static final String SERVICE_ACCOUNT_KEY_PATH = "src/main/resources/serviceAccountKey.json";
     private static final String VALUES_UPDATED_AT_PATH_LOG = "Values updated successfully at path: {\"path\":\"{}\",\"values\":\"{}\"}";
     private static final String VALUE_SET_AT_PATH_LOG = "Value set successfully at path: {\"path\":\"{}\",\"value\":\"{}\"}";
     private static final String VALUE_RETRIEVED_AT_PATH_LOG = "Value retrieved successfully at path: {\"path\":\"{}\",\"value\":\"{}\"}";
@@ -32,7 +31,7 @@ public class FirebaseServiceImpl implements FirebaseService {
         try {
             // Create FirebaseOptions
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(new FileInputStream(SERVICE_ACCOUNT_KEY_PATH)))
+                    .setCredentials(GoogleCredentials.fromStream(new FileInputStream(propertiesManager.getServiceKeyPath())))
                     .setDatabaseUrl(propertiesManager.getFirebaseUrl())
                     .build();
 
