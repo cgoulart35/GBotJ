@@ -15,7 +15,7 @@ public class ConfigQueries {
         this.firebaseService = firebaseService;
     }
 
-    public Mono<Boolean> getFeatureToggleValue(final String serverId, final String item) {
-        return firebaseService.getValueAtPathBoolean("/servers/" + serverId + "/" + item);
+    public Mono<Boolean> getFeatureToggleValue(final String serverId, final String featureName) {
+        return firebaseService.getValueAtPathBoolean("/servers/" + serverId + "/" + featureName);
     }
 }
