@@ -9,4 +9,5 @@ services:
       target: dev
     restart: unless-stopped
     ports:
+      - "5005:5005"
       - "5003:5004"
