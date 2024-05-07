@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +20,7 @@ import java.util.Map;
 @Service
 public class FirebaseServiceImpl implements FirebaseService {
 
+    private static final String SERVICE_KEY_FILE = "serviceAccountKey.json";
     private static final String VALUES_UPDATED_AT_PATH_LOG = "Values updated successfully at path: {\"path\":\"{}\",\"values\":\"{}\"}";
     private static final String VALUE_SET_AT_PATH_LOG = "Value set successfully at path: {\"path\":\"{}\",\"value\":\"{}\"}";
     private static final String VALUE_RETRIEVED_AT_PATH_LOG = "Value retrieved successfully at path: {\"path\":\"{}\",\"value\":\"{}\"}";
@@ -29,9 +30,12 @@ public class FirebaseServiceImpl implements FirebaseService {
     @Autowired
     public FirebaseServiceImpl(final PropertiesManager propertiesManager) {
         try {
+            // Load the service account key file as a classpath resource
+            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream(SERVICE_KEY_FILE);
+
             // Create FirebaseOptions
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(new FileInputStream(propertiesManager.getServiceKeyPath())))
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .setDatabaseUrl(propertiesManager.getFirebaseUrl())
                     .build();
 

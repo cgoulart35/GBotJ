@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+
+  gbotj-dev:
+    container_name: "GBotJ_dev"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: dev
+    restart: unless-stopped
+    ports:
+      - "5003:5004"

@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+
+  gbotj-prod:
+    container_name: "GBotJ_prod"
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: prod
+    restart: unless-stopped
+    ports:
+      - "5004:5004"
