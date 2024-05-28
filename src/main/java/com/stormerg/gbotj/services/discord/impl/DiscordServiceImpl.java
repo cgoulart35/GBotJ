@@ -1,8 +1,9 @@
 package com.stormerg.gbotj.services.discord.impl;
 
 import com.stormerg.gbotj.services.discord.DiscordService;
-import com.stormerg.gbotj.services.discord.commands.CustomSlashCommandData;
+import com.stormerg.gbotj.services.discord.commands.PaginationService;
 import com.stormerg.gbotj.services.discord.commands.SlashCommandHandler;
+import com.stormerg.gbotj.services.discord.commands.models.CustomSlashCommandData;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -10,13 +11,16 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -28,13 +32,16 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
     private final CustomSlashCommandData[] REGISTERED_SLASH_COMMANDS;
 
     private final SlashCommandHandler slashCommandHandler;
+    private final PaginationService paginationService;
 
     private JDA jda;
 
     @Autowired
     public DiscordServiceImpl(final PropertiesManager propertiesManager,
-                              final SlashCommandHandler slashCommandHandler) {
+                              final SlashCommandHandler slashCommandHandler,
+                              final PaginationService paginationService) {
         this.slashCommandHandler = slashCommandHandler;
+        this.paginationService = paginationService;
 
         DISCORD_TOKEN = propertiesManager.getDiscordToken();
         SLASH_COMMAND_TEST_GUILDS = propertiesManager.getDiscordDevSlashCmdGuildIdsArray();
@@ -45,10 +52,11 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
     @Async
     public void init() {
         try {
-            jda = JDABuilder.createDefault(DISCORD_TOKEN)
+            jda = JDABuilder.createDefault(DISCORD_TOKEN, EnumSet.allOf(GatewayIntent.class))
                     .addEventListeners(this)
                     .build()
                     .awaitReady();
+            slashCommandHandler.setJda(jda);
             registerCommands(jda);
         } catch (Exception e) {
             log.error("Error initializing Discord bot: {}", e.getMessage());
@@ -86,6 +94,12 @@ public class DiscordServiceImpl extends ListenerAdapter implements DiscordServic
     @Override
     public void onMessageReceived(final MessageReceivedEvent event) {
         // Implement message received handler
+    }
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event) {
+        // Every reaction check to see if registered for pagination
+        paginationService.onMessageReactionAdd(event);
     }
 
     @Override

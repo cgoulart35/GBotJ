@@ -1,15 +1,23 @@
 package com.stormerg.gbotj.services.discord.commands.impl;
 
 import com.stormerg.gbotj.services.discord.commands.AbstractCommandModule;
-import com.stormerg.gbotj.services.discord.commands.CustomSlashCommandData;
+import com.stormerg.gbotj.services.discord.commands.PaginationService;
 import com.stormerg.gbotj.services.discord.commands.helpers.InteractionHelper;
+import com.stormerg.gbotj.services.discord.commands.models.CustomSlashCommandData;
 import com.stormerg.gbotj.services.firebase.FirebaseService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -17,13 +25,14 @@ public class CommandModuleConfigImpl extends AbstractCommandModule {
 
     @Autowired
     public CommandModuleConfigImpl(final PropertiesManager propertiesManager,
-                                   final FirebaseService firebaseService) {
-        super(propertiesManager, firebaseService);
+                                   final FirebaseService firebaseService,
+                                   final PaginationService paginationService) {
+        super(propertiesManager, firebaseService, paginationService);
     }
 
     @Override
     protected void setSupportedCommands() {
-        CustomCommandDataImpl configCommand = new CustomCommandDataImpl("config", "Config command");
+        CustomSlashCommandData configCommand = new CustomSlashCommandData("config", "Config command");
         configCommand.setGuildOnly(true);
 
         supportedCommands = new CustomSlashCommandData[] {
@@ -61,13 +70,36 @@ public class CommandModuleConfigImpl extends AbstractCommandModule {
                 InteractionHelper.sendMessage(event, false, "Your prefix is: " + prefix)).then();
 
         // Send ending message
-        Mono<Void> endingMessage = Mono.fromRunnable(() ->
-                InteractionHelper.sendMessage(event, false, "Ending config command"));
+        Mono<Void> endingMessage = Mono.fromRunnable(() -> {
+            InteractionHelper.sendMessage(event, false, "Ending config command");
+
+            List<MessageEmbed> pages = new ArrayList<>();
+            pages.add(createDummyEmbed(1));
+            pages.add(createDummyEmbed(2));
+            pages.add(createDummyEmbed(3));
+            paginationService.paginate(event, false,
+                    propertiesManager.getUserResponseTimeoutSeconds(), TimeUnit.SECONDS, pages);
+        });
 
         // Combine the starting message, prefix message, and ending message
         return startingMessage
                 .then(prefixMessage)
                 .then(endingMessage);
+    }
+
+    // TODO - remove example
+    private MessageEmbed createDummyEmbed(int num) {
+        EmbedBuilder builder = new EmbedBuilder();
+        builder.setTitle("Example Embed Title" + num)
+                .setDescription("This is an example of a message embed.")
+                .setColor(Color.BLUE)
+                .addField("Field 1", "This is the value of field 1", true)
+                .addField("Field 2", "This is the value of field 2", true)
+                .addField("Field 3", "This is the value of field 3", false)
+                .setFooter("This is the footer text", "https://example.com/footer_icon.png")
+                .setThumbnail("https://example.com/thumbnail.png")
+                .setImage("https://example.com/image.png");
+        return builder.build();
     }
 
 //    // TODO - remove example

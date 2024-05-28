@@ -1,10 +1,13 @@
 package com.stormerg.gbotj.services.discord.commands;
 
+import com.stormerg.gbotj.services.discord.commands.models.CustomSlashCommandData;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import reactor.core.publisher.Mono;
 
 public interface SlashCommandHandler {
 
+    void setJda(final JDA jda);
     CustomSlashCommandData[] getSupportedSlashCommands();
     Mono<Void> handleSlashCommand(final SlashCommandInteractionEvent event);
 

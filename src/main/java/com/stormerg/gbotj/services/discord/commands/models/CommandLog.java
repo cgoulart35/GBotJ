@@ -1,7 +1,6 @@
 package com.stormerg.gbotj.services.discord.commands.models;
 
 import com.google.gson.Gson;
-import com.stormerg.gbotj.services.discord.commands.CustomSlashCommandData;
 import com.stormerg.gbotj.utils.StringUtility;
 import lombok.Getter;
 import lombok.Setter;
