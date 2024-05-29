@@ -67,14 +67,12 @@ public class SlashCommandHandlerImpl implements SlashCommandHandler {
                 // Ensure command is not null, handle gracefully if not found
                 if (command != null) {
                     Mono<CommandLog> getCommandLog = validateCommandEvent(module, command, event);
-
-                    Mono<Void> logCommandInfo = getCommandLog.doOnNext(commandLog ->
-                            log.info("Forwarding slash command -> {}: {}", module.getClass().getName(), commandLog)).then();
-
-                    Mono<Void> handleCommand = module.handleCommand(command, event);
-
-                    return logCommandInfo
-                            .then(handleCommand)
+                    return getCommandLog.flatMap(commandLog ->
+                            Mono.fromRunnable(() -> {
+                                log.info("Forwarding slash command -> {}: {}", module.getClass().getName(), commandLog);
+                            })
+                            .then(module.handleCommand(command, event)
+                                .doOnTerminate(() -> log.info("Slash command completed successfully: {}", commandLog)))
                             .onErrorResume(GBotDiscordException.class, error -> {
                                 // if it is a known exception, log stacktrace and return expected error message
                                 handleKnownException(event, error);
@@ -84,7 +82,8 @@ public class SlashCommandHandlerImpl implements SlashCommandHandler {
                                 // if it is not a known exception, log stacktrace and return general error message
                                 handleUnknownException(event, error);
                                 return Mono.empty();
-                            });
+                            })
+                    );
                 }
             }
         } catch (GBotDiscordException error) {

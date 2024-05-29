@@ -56,7 +56,7 @@ public class PaginationServiceImpl extends ListenerAdapter implements Pagination
             guildMsg = " in guild " + guild.getId() + "/" + guild.getName();
         }
 
-        log.info("Sending paginated message to {} channel {}/{}{}",
+        log.info("Creating new pagination session and sending message to {} channel {}/{}{}",
                 channel.getType().name(), channel.getId(), channel.getName(), guildMsg);
 
         MessageEmbed firstPage = pages.getFirst();
@@ -95,9 +95,9 @@ public class PaginationServiceImpl extends ListenerAdapter implements Pagination
         ScheduledFuture<?> future = scheduler.schedule(() -> {
             message.delete().queue(success -> {
                 paginationDataMap.remove(message.getId());
-                log.info("Deleted pagination message and ending session: {}", message.getId());
+                log.info("Deleted pagination message and ended session: {}", message.getId());
             }, failure -> {
-                log.error("Failed to delete pagination message: {}", message.getId(), failure);
+                log.error("Failed to delete pagination message and end session: {}", message.getId(), failure);
             });
         }, paginationData.getTimeout(), paginationData.getUnit());
         paginationData.setDeletionTask(future);
