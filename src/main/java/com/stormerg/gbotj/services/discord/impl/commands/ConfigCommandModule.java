@@ -3,7 +3,7 @@ package com.stormerg.gbotj.services.discord.impl.commands;
 import com.stormerg.gbotj.services.discord.impl.helpers.InteractionHelper;
 import com.stormerg.gbotj.services.discord.impl.models.CustomSlashCommandData;
 import com.stormerg.gbotj.services.discord.impl.listeners.PaginationService;
-import com.stormerg.gbotj.services.firebase.FirebaseService;
+import com.stormerg.gbotj.services.firebase.impl.business.ConfigQueries;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -22,11 +22,14 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ConfigCommandModule extends AbstractCommandModule {
 
+    private final ConfigQueries configQueries;
+
     @Autowired
     public ConfigCommandModule(final PropertiesManager propertiesManager,
-                               final FirebaseService firebaseService,
-                               final PaginationService paginationService) {
-        super(propertiesManager, firebaseService, paginationService);
+                               final PaginationService paginationService,
+                               final ConfigQueries configQueries) {
+        super(propertiesManager, paginationService);
+        this.configQueries = configQueries;
     }
 
     @Override
@@ -63,7 +66,7 @@ public class ConfigCommandModule extends AbstractCommandModule {
                 InteractionHelper.sendMessage(event, true, "Starting config command"));
 
         // Get the server's prefix value
-        Mono<String> getPrefix = firebaseService.getValueAtPathString("/servers/" + event.getGuild().getId() + "/prefix");
+        Mono<String> getPrefix = configQueries.getPrefixValue(event.getGuild().getId());
 
         // Send message about prefix before endingMessage
         Mono<Void> prefixMessage = getPrefix.doOnNext(prefix ->

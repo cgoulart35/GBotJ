@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
 public abstract class AbstractCommandModule {
 
     protected final PropertiesManager propertiesManager;
-    protected final FirebaseService firebaseService;
     protected final PaginationService paginationService;
 
     @Getter
@@ -24,16 +23,15 @@ public abstract class AbstractCommandModule {
     protected JDA jda;
 
     public AbstractCommandModule(final PropertiesManager propertiesManager,
-                                 final FirebaseService firebaseService,
                                  final PaginationService paginationService) {
         this.propertiesManager = propertiesManager;
-        this.firebaseService = firebaseService;
         this.paginationService = paginationService;
 
         this.setSupportedCommands();
         this.setFeatureToggleName();
     }
 
+    // command modules are required to implement these methods
     protected abstract void setSupportedCommands();
     protected abstract void setFeatureToggleName();
     public abstract Mono<Void> handleCommand(final CustomSlashCommandData command, final SlashCommandInteractionEvent event);
