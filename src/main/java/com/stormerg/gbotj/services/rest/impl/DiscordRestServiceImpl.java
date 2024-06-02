@@ -2,7 +2,6 @@ package com.stormerg.gbotj.services.rest.impl;
 
 import com.stormerg.gbotj.services.firebase.FirebaseService;
 import com.stormerg.gbotj.services.properties.PropertiesManager;
-import com.stormerg.gbotj.services.rest.AbstractFirebaseRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
